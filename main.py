@@ -1,85 +1,104 @@
 import httpx
-import json
-
-# search for mod itself
-
-while True:
-
-  searchTerm = input("Search term (Q to quit): ")
-
-  if (searchTerm == "q") or (searchTerm == "Q"):
-      exit("\n Exiting...")
-      pass
-  test = httpx.get('https://api.modrinth.com/v2/search?query='+searchTerm).json()["total_hits"]
-  if test == 0:
-    print('\n No results found!')
-    print(" ")
-  else:
-    break
-  pass
+from urllib import parse
+import os
 
 
-  
-resp = httpx.get('https://api.modrinth.com/v2/search?query='+searchTerm).json()["hits"]
+# User input function
+def user_input():
+    search_term = input("Enter a search term (q to exit): ")
 
-number = int(0)
+    if search_term.lower() == "q":
+        print("Exiting...")
+        exit()
+    else:
+        user_selection(search_term)
 
 
+# User mod selection function
+def user_selection(search_term: str):
+    print("Searching...")
 
-while True:    
-    
-    if number == 10:
-        print("\n Be more specific with your name.")
-        
-    
-    first = resp[number]
-    print(" ")
-    print("Title:", first["title"])
-    print("By:", first["author"])
-    print("Desc:", first["description"])
-    ID = first["project_id"]
-        
-    isThisIt = input("Is this it? (Y/N/Q/S): ")
-    if (isThisIt == "Y") or (isThisIt == "y"):
-        print(" ")
-        break
-    elif (isThisIt == "N") or (isThisIt == "n"):
-        number = 1 + number
-    elif (isThisIt == "S") or (isThisIt == "s"):
-      while True:
+    # Perform the search using the search term, ensure search term is URL encoded
+    request = httpx.get(
+        f"https://api.modrinth.com/v2/search?query={parse.quote_plus(search_term)}"
+    )
+    request.raise_for_status()
 
-        searchTerm = input("Search term (Q to quit): ")
+    request_json = request.json()
+    if len(request_json["hits"]) == 0:  # No results found
+        print("No results found.")
+    else:
+        # Cap hits at 10
+        request_json["hits"] = request_json["hits"][:10]
+        print(f"Showing {len(request_json['hits'])} results.\n")
 
-        if (searchTerm == "q") or (searchTerm == "Q"):
-            exit("\n Exiting...")
-            pass
-        test = httpx.get('https://api.modrinth.com/v2/search?query='+searchTerm).json()["total_hits"]
-        if test == 0:
-          print('\n No results found!')
-          print(" ")
+        for i, item in enumerate(request_json["hits"]):
+            print(f"Result {i + 1}:")
+            print(f"Title: {item['title']}")
+            print(f"By: {item['author']}")
+            print(f"Description: {item['description']}")
+
+            # Run until we get a valid response
+            while True:
+                is_this_it = input("Is this the one you want? (y/n/s/q): ").lower()
+
+                if is_this_it == "y":  # Yes
+                    os.system(
+                        "cls" if os.name == "nt" else "clear"
+                    )  # Cross platform clear
+                    print(f"You have selected {item['title']}.")
+
+                    project_request = httpx.get(
+                        f"https://api.modrinth.com/v2/project/{item['project_id']}"
+                    )
+                    project_request.raise_for_status()
+
+                    project_json = project_request.json()
+                    user_version(project_json["game_versions"])
+                elif is_this_it == "n":  # No
+                    os.system(
+                        "cls" if os.name == "nt" else "clear"
+                    )  # Cross platform clear
+                    break
+                elif is_this_it == "s":  # Search again
+                    break
+                elif is_this_it == "q":  # Quit
+                    print("Exiting...")
+                    exit()
+                else:  # Invalid input
+                    print("Invalid input. Please enter y, n, s, or q.")
+
+            # Stop going through results if user input is search again
+            if is_this_it == "s":
+                os.system("cls" if os.name == "nt" else "clear")  # Cross platform clear
+                break
+
+        # Only show please try again if user input doesn't equal search again
+        if is_this_it != "s":
+            print("Please try again.\n")
+
+
+# User version selection function
+def user_version(versions: list):
+    # Invert list
+    versions.reverse()
+
+    # Run until we get a valid response
+    while True:
+        print(f"Supported MC versions: {', '.join(versions)}")
+        user_version = str(input("\nWhat version would you like to download for? "))
+
+        if user_version in versions:
+            os.system("cls" if os.name == "nt" else "clear")  # Cross platform clear
+            print(f"Downloading for {user_version}...")
+
+            # This is where you would handle downloading, for now we will just exit
+            exit()
         else:
-          break
-        pass
-      resp = httpx.get('https://api.modrinth.com/v2/search?query='+searchTerm).json()["hits"] 
-        
-    elif (isThisIt == "Q") or (isThisIt == "q"):
-        exit("\n Exiting.")
-    else:
-        print("\n That's not an option.")
+            print("\nVersion not supported. Please try again.\n")
 
-# ask the user for specific version
 
-a = httpx.get('https://api.modrinth.com/v2/project/'+ID).json()['versions']
-
-number = -1
-while number != -11:
-  def extract_id(idList):
-    if idList:
-      return idList[number]
-    else:
-      return None
-
-  verid = extract_id(a)
-  b = httpx.get('https://api.modrinth.com/v2/version/'+verid).json()['name'] + " " + str(httpx.get('https://api.modrinth.com/v2/version/'+verid).json()['game_versions'])
-  print(str(number * -1)+".", b)
-  number = number - 1
+# Run the program
+if __name__ == "__main__":
+    while True:
+        user_input()
