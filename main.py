@@ -25,7 +25,7 @@ def user_selection(search_term: str):
     request.raise_for_status()
 
     request_json = request.json()
-    if request_json["hits"] == 0:  # No results found
+    if len(request_json["hits"]) == 0:  # No results found
         print("No results found.")
     else:
         # Cap hits at 10
