@@ -242,6 +242,8 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
             f"Successfully downloaded mod to {downloads_directory / project_slug / file_name}."
         )
 
+        break
+
 
 # Run the program
 if __name__ == "__main__":
