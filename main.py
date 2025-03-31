@@ -215,6 +215,7 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
 
         if len(version["files"]) == 0:
             print(f"No files found for {user_version}. Please try again.\n")
+            continue
 
         file_selection = 0
         print(f"Multiple files found for {user_version}. Please select one:\n")
