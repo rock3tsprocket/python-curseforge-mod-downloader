@@ -198,7 +198,7 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
             print(f"{i + 1}: {version['name']}")
         while True:
             version_selection = prompt_user(
-                "Enter the number of the version you want to download (or blank for the first one): "
+                "Enter the number of the version you want to download (leave blank to choose the first one): "
             )
             try:
                 if version_selection == "":
@@ -217,21 +217,24 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
             print(f"No files found for {user_version}. Please try again.\n")
             continue
 
+        clear_console()
+
         file_selection = 0
-        print(f"Multiple files found for {user_version}. Please select one:\n")
-        for i, file in enumerate(version["files"]):
-            print(f"{i + 1}: {file['filename']}")
-        while True:
-            file_selection = prompt_user(
-                "Enter the number of the file you want to download: "
-            )
-            try:
-                file_selection = int(file_selection) - 1
-                if file_selection < 0 or file_selection >= len(version["files"]):
-                    raise ValueError
-                break
-            except ValueError:
-                print("Invalid input. Please enter a number.")
+        if len(version["files"]) > 1:
+            print(f"Multiple files found for {user_version}. Please select one:\n")
+            for i, file in enumerate(version["files"]):
+                print(f"{i + 1}: {file['filename']}")
+            while True:
+                file_selection = prompt_user(
+                    "Enter the number of the file you want to download: "
+                )
+                try:
+                    file_selection = int(file_selection) - 1
+                    if file_selection < 0 or file_selection >= len(version["files"]):
+                        raise ValueError
+                    break
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
 
         file = version["files"][file_selection]
         file_download = file["url"]
