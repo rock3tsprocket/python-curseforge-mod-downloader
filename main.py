@@ -1,39 +1,52 @@
+"""Modrinth Mod Downloader
+This script allows users to search for and download mods from the Modrinth API, through a convenient command-line interface.
+It provides functionality to search for mods, select a specific version, and download the mod files to a specified directory.
+"""
+
 import os
-from urllib import parse
+from pathlib import Path
+from typing import List
 
 import httpx
 
 
 def clear_console():
+    """Clear the console screen."""
     os.system("cls" if os.name == "nt" else "clear")
 
 
-def user_input():
+def search_interface() -> bool:
+    """Prompt the user for a search term and let them select a mod to download.
+    Returns:
+        bool: True if the search and download were succesful, False otherwise.
+    """
+    clear_console()
     search_term = input("Enter a search term (or q to exit): ")
 
     if search_term.lower() == "q":
         print("Exiting...")
         exit()
-    else:
-        user_selection(search_term)
 
-
-def user_selection(search_term: str):
     print("Searching...")
 
     # Perform the search using the search term, ensure search term is URL encoded
     request = httpx.get(
-        f"https://api.modrinth.com/v2/search?query={parse.quote_plus(search_term)}"
+        "https://api.modrinth.com/v2/search", params={"query": search_term}
     )
-    request.raise_for_status()
+    try:
+        request.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        print(f"Search failed: {e.response.status_code} - {e.response.text}")
+        return False
 
     request_json = request.json()
     if len(request_json["hits"]) == 0:  # No results found
         print("No results found.")
-        return
+        return False
 
-    # Cap hits at 10
-    request_json["hits"] = request_json["hits"][:10]
+    # Cap hits at 10 - this is no longer necessary, as the user now chooses the mod to download using a more compact interface.
+    # request_json["hits"] = request_json["hits"][:10]
+
     print(f"Showing {len(request_json['hits'])} results.\n")
 
     mod_choice = 0
@@ -54,111 +67,132 @@ def user_selection(search_term: str):
 
 
 # User version selection function
-def download(versions: list, project_id: str, project_slug: str):
+def download(versions: List[str], project_id: str, project_slug: str) -> bool:
+    """Download a mod given a list of versions, a project ID, and a project slug.
+    Args:
+        versions (List[str]): A list of versions to download.
+        project_id (str): The ID of the project.
+        project_slug (str): The slug of the project.
+
+    Returns:
+        bool: True if the download was successful, False otherwise.
+    """
     # Invert list
     versions.reverse()
 
+    pretty_versions_dict = {}
+    for version in versions:
+        base_version = ".".join(version.split(".")[:2])
+        if base_version in pretty_versions_dict:
+            pretty_versions_dict[base_version].append(version)
+        else:
+            pretty_versions_dict[base_version] = [version]
+
+    print("Supported MC versions:")
+    for base_version, versions in pretty_versions_dict.items():
+        print(f"{base_version}: {', '.join(versions)}")
+
     # Run until we get a valid response
     while True:
-        print(f"Supported MC versions: {', '.join(versions)}")
         user_version = str(
             input(
                 "\nWhat version would you like to download for? (leave blank for latest): "
             )
-        )
+        ).strip()
         if user_version == "":
             user_version = versions[0]
 
-        if user_version in versions:
-            clear_console()
-            print(f"Downloading for {user_version}...")
-
-            versions_request = httpx.get(
-                f"https://api.modrinth.com/v2/project/{project_id}/version",
-                params={
-                    "game_versions": [
-                        user_version,
-                    ]
-                },
-            )
-            versions_request.raise_for_status()
-
-            versions_json = versions_request.json()
-
-            versions_json = [
-                version
-                for version in versions_json
-                if user_version in version["game_versions"]
-            ]
-
-            if len(versions_json) == 0:
-                print(f"No versions found for {user_version}. Please try again.\n")
-                continue
-
-            if len(versions_json) > 1:
-                print(
-                    f"Multiple versions found for {user_version}. Please select one:\n"
-                )
-                for i, version in enumerate(versions_json):
-                    print(f"{i + 1}: {version['name']}")
-                while True:
-                    version_selection = input(
-                        "Enter the number of the version you want to download: "
-                    )
-                    try:
-                        version_selection = int(version_selection) - 1
-                        if version_selection < 0 or version_selection >= len(
-                            versions_json
-                        ):
-                            raise ValueError
-                        break
-                    except ValueError:
-                        print("Invalid input. Please enter a number.")
-
-            version = versions_json[version_selection]
-
-            if len(version["files"]) == 0:
-                print(f"No files found for {user_version}. Please try again.\n")
-
-            file_selection = 0
-            if len(version["files"]) > 1:
-                print(f"Multiple files found for {user_version}. Please select one:\n")
-                for i, file in enumerate(version["files"]):
-                    print(f"{i + 1}: {file['filename']}")
-                while True:
-                    file_selection = input(
-                        "Enter the number of the file you want to download: "
-                    )
-                    try:
-                        file_selection = int(file_selection) - 1
-                        if file_selection < 0 or file_selection >= len(
-                            version["files"]
-                        ):
-                            raise ValueError
-                        break
-                    except ValueError:
-                        print("Invalid input. Please enter a number.")
-
-            file = version["files"][file_selection]
-            file_download = file["url"]
-            file_name = file["filename"]
-
-            os.makedirs(f"downloads/{project_slug}", exist_ok=True)
-
-            with open(f"downloads/{project_slug}/{file_name}", "wb") as output_file:
-                output_file.write(httpx.get(file_download).content)
-
+        if user_version not in versions:
             print(
-                f"Successfully downloaded mod to downloads/{project_slug}/{file_name}."
+                f"Version {user_version} not supported. Supported versions are: {', '.join(versions)}"
             )
+            continue
 
-            # This is where you would handle downloading, for now we will just exit
-            exit()
-        else:
-            print("\nVersion not supported. Please try again.\n")
+        clear_console()
+        print(f"Downloading for {user_version}...")
+
+        mod_versions_request = httpx.get(
+            f"https://api.modrinth.com/v2/project/{project_id}/version",
+            params={
+                "game_versions": [
+                    user_version,
+                ]
+            },
+        )
+
+        try:
+            mod_versions_request.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            print(f"Search failed: {e.response.status_code} - {e.response.text}")
+            return False
+
+        mod_versions_json: List[dict] = mod_versions_request.json()
+
+        mod_versions_json = [
+            version
+            for version in mod_versions_json
+            if user_version in version["game_versions"]
+        ]
+
+        if len(mod_versions_json) == 0:
+            print(f"No versions found for {user_version}. Please try again.\n")
+            continue
+
+        print(f"Multiple versions found for {user_version}. Please select one:\n")
+        for i, version in enumerate(mod_versions_json):
+            print(f"{i + 1}: {version['name']}")
+        while True:
+            version_selection = input(
+                "Enter the number of the version you want to download: "
+            )
+            try:
+                version_selection = int(version_selection) - 1
+                if version_selection < 0 or version_selection >= len(mod_versions_json):
+                    raise ValueError
+                break
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+
+        version = mod_versions_json[version_selection]
+
+        if len(version["files"]) == 0:
+            print(f"No files found for {user_version}. Please try again.\n")
+
+        file_selection = 0
+        print(f"Multiple files found for {user_version}. Please select one:\n")
+        for i, file in enumerate(version["files"]):
+            print(f"{i + 1}: {file['filename']}")
+        while True:
+            file_selection = input(
+                "Enter the number of the file you want to download: "
+            )
+            try:
+                file_selection = int(file_selection) - 1
+                if file_selection < 0 or file_selection >= len(version["files"]):
+                    raise ValueError
+                break
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+
+        file = version["files"][file_selection]
+        file_download = file["url"]
+        file_name = file["filename"]
+
+        downloads_directory = (
+            Path.home() / "python-modrinth-mod-downloader" / "downloads"
+        )
+
+        os.makedirs(downloads_directory / project_slug, exist_ok=True)
+
+        with open(downloads_directory / project_slug / file_name, "wb") as output_file:
+            output_file.write(httpx.get(file_download).content)
+
+        print(
+            f"Successfully downloaded mod to {downloads_directory / project_slug / file_name}."
+        )
 
 
 # Run the program
 if __name__ == "__main__":
     while True:
-        user_input()
+        search_interface()
