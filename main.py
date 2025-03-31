@@ -177,20 +177,24 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
             print(f"Search failed: {e.response.status_code} - {e.response.text}")
             return False
 
-        mod_versions_json: List[dict] = mod_versions_request.json()
+        mod_versions_list: List[dict] = mod_versions_request.json()
 
-        mod_versions_json = [
+        mod_versions_list = [
             version
-            for version in mod_versions_json
+            for version in mod_versions_list
             if user_version in version["game_versions"]
         ]
 
-        if len(mod_versions_json) == 0:
+        if len(mod_versions_list) == 0:
             print(f"No versions found for {user_version}. Please try again.\n")
             continue
 
         print(f"Multiple versions found for {user_version}. Please select one:\n")
-        for i, version in enumerate(mod_versions_json):
+        mod_versions_list = sorted(
+            mod_versions_list, key=lambda x: sorted(x["loaders"])[0]
+        )
+
+        for i, version in enumerate(mod_versions_list):
             print(f"{i + 1}: {version['name']}")
         while True:
             version_selection = prompt_user(
@@ -198,13 +202,13 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
             )
             try:
                 version_selection = int(version_selection) - 1
-                if version_selection < 0 or version_selection >= len(mod_versions_json):
+                if version_selection < 0 or version_selection >= len(mod_versions_list):
                     raise ValueError
                 break
             except ValueError:
                 print("Invalid input. Please enter a number.")
 
-        version = mod_versions_json[version_selection]
+        version = mod_versions_list[version_selection]
 
         if len(version["files"]) == 0:
             print(f"No files found for {user_version}. Please try again.\n")
