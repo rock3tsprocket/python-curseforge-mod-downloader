@@ -4,6 +4,7 @@ It provides functionality to search for mods, select a specific version, and dow
 """
 
 import os
+import sys
 from pathlib import Path
 from typing import List
 
@@ -15,19 +16,69 @@ def clear_console():
     os.system("cls" if os.name == "nt" else "clear")
 
 
+def help():
+    """Print the logo of the application."""
+    print("""
+███╗░░░███╗░█████╗░██████╗░██████╗░██╗███╗░░██╗████████╗██╗░░██╗  ███╗░░░███╗░█████╗░██████╗░
+████╗░████║██╔══██╗██╔══██╗██╔══██╗██║████╗░██║╚══██╔══╝██║░░██║  ████╗░████║██╔══██╗██╔══██╗
+██╔████╔██║██║░░██║██║░░██║██████╔╝██║██╔██╗██║░░░██║░░░███████║  ██╔████╔██║██║░░██║██║░░██║
+██║╚██╔╝██║██║░░██║██║░░██║██╔══██╗██║██║╚████║░░░██║░░░██╔══██║  ██║╚██╔╝██║██║░░██║██║░░██║
+██║░╚═╝░██║╚█████╔╝██████╔╝██║░░██║██║██║░╚███║░░░██║░░░██║░░██║  ██║░╚═╝░██║╚█████╔╝██████╔╝
+╚═╝░░░░░╚═╝░╚════╝░╚═════╝░╚═╝░░╚═╝╚═╝╚═╝░░╚══╝░░░╚═╝░░░╚═╝░░╚═╝  ╚═╝░░░░░╚═╝░╚════╝░╚═════╝░
+
+██████╗░░█████╗░░██╗░░░░░░░██╗███╗░░██╗██╗░░░░░░█████╗░░█████╗░██████╗░███████╗██████╗░
+██╔══██╗██╔══██╗░██║░░██╗░░██║████╗░██║██║░░░░░██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗
+██║░░██║██║░░██║░╚██╗████╗██╔╝██╔██╗██║██║░░░░░██║░░██║███████║██║░░██║█████╗░░██████╔╝
+██║░░██║██║░░██║░░████╔═████║░██║╚████║██║░░░░░██║░░██║██╔══██║██║░░██║██╔══╝░░██╔══██╗
+██████╔╝╚█████╔╝░░╚██╔╝░╚██╔╝░██║░╚███║███████╗╚█████╔╝██║░░██║██████╔╝███████╗██║░░██║
+╚═════╝░░╚════╝░░░░╚═╝░░░╚═╝░░╚═╝░░╚══╝╚══════╝░╚════╝░╚═╝░░╚═╝╚═════╝░╚══════╝╚═╝░░╚═╝""")  # via https://fsymbols.com/generators/carty/
+
+    print(
+        sys.modules[__name__].__doc__
+    )  # See https://stackoverflow.com/questions/990422/how-to-get-a-reference-to-current-modules-attributes-in-python for how this works
+    print("You can exit the program at any time by entering 'q' when prompted.\n")
+    print("Usage:")
+    print("1. Search for a mod by name.")
+    print("2. Select the mod you want to download from the search results.")
+    print("3. Select the Minecraft version you want to download for.")
+    print("4. Select the mod version you want to download.")
+    print("5. Select the file you want to download.")
+    print(
+        "6. The mod will be downloaded to the 'python-modrinth-mod-downloader/downloads' directory in your home folder.\n"
+    )
+    print(
+        "Note: This program is not affiliated with Modrinth in any way. It is a simple command-line interface for downloading mods via the Modrinth API.\n"
+    )
+
+
+def prompt_user(prompt: str) -> str:
+    """Prompt the user for input and return the response.
+    Args:
+        prompt (str): The prompt to display to the user.
+
+    Returns:
+        str: The user's response.
+    """
+    response = input(prompt).strip()
+    if response.lower() == "q":
+        print("Exiting...")
+        exit()
+    return response
+
+
 def search_interface() -> bool:
     """Prompt the user for a search term and let them select a mod to download.
     Returns:
         bool: True if the search and download were succesful, False otherwise.
     """
     clear_console()
-    search_term = input("Enter a search term (or q to exit): ")
-
-    if search_term.lower() == "q":
-        print("Exiting...")
-        exit()
-
-    print("Searching...")
+    while True:
+        search_term = prompt_user("Enter the name of the mod you want to search for: ")
+        if search_term == "":
+            print("No search term provided. Please provide a search term.")
+            continue
+        print("Searching...")
+        break
 
     # Perform the search using the search term, ensure search term is URL encoded
     request = httpx.get(
@@ -55,7 +106,7 @@ def search_interface() -> bool:
         for i, item in enumerate(request_json["hits"]):
             print(f"{i + 1}: {item['title']} by {item['author']}")
         mod_choice = (
-            int(input("Enter the number of the mod you want to download: ")) - 1
+            int(prompt_user("Enter the number of the mod you want to download: ")) - 1
         )
 
     item = request_json["hits"][mod_choice]
@@ -89,13 +140,13 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
             pretty_versions_dict[base_version] = [version]
 
     print("Supported MC versions:")
-    for base_version, versions in pretty_versions_dict.items():
-        print(f"{base_version}: {', '.join(versions)}")
+    for base_version, sub_versions in pretty_versions_dict.items():
+        print(f"{base_version}:\n- {', '.join(sub_versions)}")
 
     # Run until we get a valid response
     while True:
         user_version = str(
-            input(
+            prompt_user(
                 "\nWhat version would you like to download for? (leave blank for latest): "
             )
         ).strip()
@@ -142,7 +193,7 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
         for i, version in enumerate(mod_versions_json):
             print(f"{i + 1}: {version['name']}")
         while True:
-            version_selection = input(
+            version_selection = prompt_user(
                 "Enter the number of the version you want to download: "
             )
             try:
@@ -163,7 +214,7 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
         for i, file in enumerate(version["files"]):
             print(f"{i + 1}: {file['filename']}")
         while True:
-            file_selection = input(
+            file_selection = prompt_user(
                 "Enter the number of the file you want to download: "
             )
             try:
