@@ -91,6 +91,10 @@ def download(versions: list, project_id: str, project_slug: str):
                 if user_version in version["game_versions"]
             ]
 
+            if len(versions_json) == 0:
+                print(f"No versions found for {user_version}. Please try again.\n")
+                continue
+
             if len(versions_json) > 1:
                 print(
                     f"Multiple versions found for {user_version}. Please select one:\n"
@@ -112,6 +116,9 @@ def download(versions: list, project_id: str, project_slug: str):
                         print("Invalid input. Please enter a number.")
 
             version = versions_json[version_selection]
+
+            if len(version["files"]) == 0:
+                print(f"No files found for {user_version}. Please try again.\n")
 
             file_selection = 0
             if len(version["files"]) > 1:
