@@ -198,9 +198,12 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
             print(f"{i + 1}: {version['name']}")
         while True:
             version_selection = prompt_user(
-                "Enter the number of the version you want to download: "
+                "Enter the number of the version you want to download (or blank for the first one): "
             )
             try:
+                if version_selection == "":
+                    version_selection = 0
+                    break
                 version_selection = int(version_selection) - 1
                 if version_selection < 0 or version_selection >= len(mod_versions_list):
                     raise ValueError
