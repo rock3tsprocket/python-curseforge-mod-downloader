@@ -14,9 +14,10 @@ import httpx
 def clear_console():
     """Clear the console screen."""
     os.system("cls" if os.name == "nt" else "clear")
+    logo()
 
 
-def help():
+def logo():
     """Print the logo of the application."""
     print("""
 ███╗░░░███╗░█████╗░██████╗░██████╗░██╗███╗░░██╗████████╗██╗░░██╗  ███╗░░░███╗░█████╗░██████╗░
@@ -31,8 +32,11 @@ def help():
 ██║░░██║██║░░██║░╚██╗████╗██╔╝██╔██╗██║██║░░░░░██║░░██║███████║██║░░██║█████╗░░██████╔╝
 ██║░░██║██║░░██║░░████╔═████║░██║╚████║██║░░░░░██║░░██║██╔══██║██║░░██║██╔══╝░░██╔══██╗
 ██████╔╝╚█████╔╝░░╚██╔╝░╚██╔╝░██║░╚███║███████╗╚█████╔╝██║░░██║██████╔╝███████╗██║░░██║
-╚═════╝░░╚════╝░░░░╚═╝░░░╚═╝░░╚═╝░░╚══╝╚══════╝░╚════╝░╚═╝░░╚═╝╚═════╝░╚══════╝╚═╝░░╚═╝""")  # via https://fsymbols.com/generators/carty/
+╚═════╝░░╚════╝░░░░╚═╝░░░╚═╝░░╚═╝░░╚══╝╚══════╝░╚════╝░╚═╝░░╚═╝╚═════╝░╚══════╝╚═╝░░╚═╝\n\n""")  # via https://fsymbols.com/generators/carty/
 
+
+def help():
+    """Print the help message for the application."""
     print(
         sys.modules[__name__].__doc__
     )  # See https://stackoverflow.com/questions/990422/how-to-get-a-reference-to-current-modules-attributes-in-python for how this works
@@ -98,7 +102,9 @@ def search_interface() -> bool:
     # Cap hits at 10 - this is no longer necessary, as the user now chooses the mod to download using a more compact interface.
     # request_json["hits"] = request_json["hits"][:10]
 
-    print(f"Showing {len(request_json['hits'])} results.\n")
+    # print(f"Showing {len(request_json['hits'])} results.\n")
+
+    clear_console()
 
     mod_choice = 0
     if len(request_json["hits"]) > 1:
@@ -138,6 +144,8 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
             pretty_versions_dict[base_version].append(version)
         else:
             pretty_versions_dict[base_version] = [version]
+
+    clear_console()
 
     print("Supported MC versions:")
     for base_version, sub_versions in pretty_versions_dict.items():
@@ -185,6 +193,8 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
             if user_version in version["game_versions"]
         ]
 
+        clear_console()
+
         if len(mod_versions_list) == 0:
             print(f"No versions found for {user_version}. Please try again.\n")
             continue
@@ -213,11 +223,11 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
 
         version = mod_versions_list[version_selection]
 
+        clear_console()
+
         if len(version["files"]) == 0:
             print(f"No files found for {user_version}. Please try again.\n")
             continue
-
-        clear_console()
 
         file_selection = 0
         if len(version["files"]) > 1:
@@ -258,5 +268,10 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
 
 # Run the program
 if __name__ == "__main__":
+    clear_console()
+    help()
     while True:
+        prompt_user("Press enter to continue or 'q' to quit. ")
         search_interface()
+        prompt_user("\nPress enter to search again or 'q' to quit. ")
+        clear_console()
