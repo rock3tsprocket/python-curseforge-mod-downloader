@@ -271,6 +271,7 @@ if __name__ == "__main__":
     clear_console()
     help()
     while True:
+        prompt_user("Press enter to continue or 'q' to quit. ")
         search_interface()
         prompt_user("\nPress enter to search again or 'q' to quit. ")
         clear_console()
