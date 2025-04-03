@@ -14,10 +14,11 @@ import httpx
 def clear_console():
     """Clear the console screen."""
     os.system("cls" if os.name == "nt" else "clear")
+    logo()
 
 
-def help():
-    """Print the logo of the application and provide usage instructions."""
+def logo():
+    """Print the logo of the application."""
     print("""
 ███╗░░░███╗░█████╗░██████╗░██████╗░██╗███╗░░██╗████████╗██╗░░██╗  ███╗░░░███╗░█████╗░██████╗░
 ████╗░████║██╔══██╗██╔══██╗██╔══██╗██║████╗░██║╚══██╔══╝██║░░██║  ████╗░████║██╔══██╗██╔══██╗
@@ -31,8 +32,11 @@ def help():
 ██║░░██║██║░░██║░╚██╗████╗██╔╝██╔██╗██║██║░░░░░██║░░██║███████║██║░░██║█████╗░░██████╔╝
 ██║░░██║██║░░██║░░████╔═████║░██║╚████║██║░░░░░██║░░██║██╔══██║██║░░██║██╔══╝░░██╔══██╗
 ██████╔╝╚█████╔╝░░╚██╔╝░╚██╔╝░██║░╚███║███████╗╚█████╔╝██║░░██║██████╔╝███████╗██║░░██║
-╚═════╝░░╚════╝░░░░╚═╝░░░╚═╝░░╚═╝░░╚══╝╚══════╝░╚════╝░╚═╝░░╚═╝╚═════╝░╚══════╝╚═╝░░╚═╝""")  # via https://fsymbols.com/generators/carty/
+╚═════╝░░╚════╝░░░░╚═╝░░░╚═╝░░╚═╝░░╚══╝╚══════╝░╚════╝░╚═╝░░╚═╝╚═════╝░╚══════╝╚═╝░░╚═╝\n\n""")  # via https://fsymbols.com/generators/carty/
 
+
+def help():
+    """Print the help message for the application."""
     print(
         sys.modules[__name__].__doc__
     )  # See https://stackoverflow.com/questions/990422/how-to-get-a-reference-to-current-modules-attributes-in-python for how this works
@@ -263,3 +267,4 @@ if __name__ == "__main__":
     while True:
         search_interface()
         prompt_user("\nPress enter to search again or 'q' to quit. ")
+        clear_console()
