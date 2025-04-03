@@ -17,7 +17,7 @@ def clear_console():
 
 
 def help():
-    """Print the logo of the application."""
+    """Print the logo of the application and provide usage instructions."""
     print("""
 ███╗░░░███╗░█████╗░██████╗░██████╗░██╗███╗░░██╗████████╗██╗░░██╗  ███╗░░░███╗░█████╗░██████╗░
 ████╗░████║██╔══██╗██╔══██╗██╔══██╗██║████╗░██║╚══██╔══╝██║░░██║  ████╗░████║██╔══██╗██╔══██╗
@@ -258,5 +258,8 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
 
 # Run the program
 if __name__ == "__main__":
+    clear_console()
+    help()
     while True:
         search_interface()
+        prompt_user("\nPress enter to search again or 'q' to quit. ")
