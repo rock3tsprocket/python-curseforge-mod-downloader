@@ -86,8 +86,12 @@ def search_interface() -> bool:
         break
 
     # Perform the search using the search term, ensure search term is URL encoded
+    headers = {
+            'Accept': 'application/json',
+            'x-api-key': '$2a$10$JvOglN2VkDb5nd8CfMzaNecSgr7l4MSVDeb/jR1B.wsfI6NVlxdc2'
+            }
     request = httpx.get(
-        "https://api.modrinth.com/v2/search", params={"query": search_term}
+        "https://api.curseforge.com/v1/mods/search", params={"searchFilter": search_term, "gameId": "432"}, headers=headers
     )
     try:
         request.raise_for_status()
@@ -96,7 +100,7 @@ def search_interface() -> bool:
         return False
 
     request_json = request.json()
-    if len(request_json["hits"]) == 0:  # No results found
+    if len(request_json["data"]) == []:  # No results found
         print("No results found.")
         return False
 
@@ -108,7 +112,7 @@ def search_interface() -> bool:
     clear_console()
 
     mod_choice = 0
-    if len(request_json["hits"]) > 1:
+    if len(request_json["data"]) != []:
         print("Select which mod you want to download:\n")
         for i, item in enumerate(request_json["hits"]):
             print(f"{i + 1}: {item['title']} by {item['author']}")
