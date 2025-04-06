@@ -1,5 +1,5 @@
 """Modrinth Mod Downloader
-This script allows users to search for and download mods from the Modrinth API, through a convenient command-line interface.
+This script allows users to search for and download mods from the Curseforge API, through a convenient command-line interface.
 It provides functionality to search for mods, select a specific version, and download the mod files to a specified directory.
 """
 
@@ -20,12 +20,13 @@ def clear_console():
 def logo():
     """Print the logo of the application."""
     print("""
-███╗░░░███╗░█████╗░██████╗░██████╗░██╗███╗░░██╗████████╗██╗░░██╗  ███╗░░░███╗░█████╗░██████╗░
-████╗░████║██╔══██╗██╔══██╗██╔══██╗██║████╗░██║╚══██╔══╝██║░░██║  ████╗░████║██╔══██╗██╔══██╗
-██╔████╔██║██║░░██║██║░░██║██████╔╝██║██╔██╗██║░░░██║░░░███████║  ██╔████╔██║██║░░██║██║░░██║
-██║╚██╔╝██║██║░░██║██║░░██║██╔══██╗██║██║╚████║░░░██║░░░██╔══██║  ██║╚██╔╝██║██║░░██║██║░░██║
-██║░╚═╝░██║╚█████╔╝██████╔╝██║░░██║██║██║░╚███║░░░██║░░░██║░░██║  ██║░╚═╝░██║╚█████╔╝██████╔╝
-╚═╝░░░░░╚═╝░╚════╝░╚═════╝░╚═╝░░╚═╝╚═╝╚═╝░░╚══╝░░░╚═╝░░░╚═╝░░╚═╝  ╚═╝░░░░░╚═╝░╚════╝░╚═════╝░
+
+░█████╗░██╗░░░██╗██████╗░░██████╗███████╗███████╗░█████╗░██████╗░░██████╗░███████╗  ███╗░░░███╗░█████╗░██████╗░  
+██╔══██╗██║░░░██║██╔══██╗██╔════╝██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝░██╔════╝  ████╗░████║██╔══██╗██╔══██╗  
+██║░░╚═╝██║░░░██║██████╔╝╚█████╗░█████╗░░█████╗░░██║░░██║██████╔╝██║░░██╗░█████╗░░  ██╔████╔██║██║░░██║██║░░██║  
+██║░░██╗██║░░░██║██╔══██╗░╚═══██╗██╔══╝░░██╔══╝░░██║░░██║██╔══██╗██║░░╚██╗██╔══╝░░  ██║╚██╔╝██║██║░░██║██║░░██║  
+╚█████╔╝╚██████╔╝██║░░██║██████╔╝███████╗██║░░░░░╚█████╔╝██║░░██║╚██████╔╝███████╗  ██║░╚═╝░██║╚█████╔╝██████╔╝  
+░╚════╝░░╚═════╝░╚═╝░░╚═╝╚═════╝░╚══════╝╚═╝░░░░░░╚════╝░╚═╝░░╚═╝░╚═════╝░╚══════╝  ╚═╝░░░░░╚═╝░╚════╝░╚═════╝░  
 
 ██████╗░░█████╗░░██╗░░░░░░░██╗███╗░░██╗██╗░░░░░░█████╗░░█████╗░██████╗░███████╗██████╗░
 ██╔══██╗██╔══██╗░██║░░██╗░░██║████╗░██║██║░░░░░██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗
@@ -48,10 +49,10 @@ def help():
     print("4. Select the mod version you want to download.")
     print("5. Select the file you want to download.")
     print(
-        "6. The mod will be downloaded to the 'python-modrinth-mod-downloader/downloads' directory in your home folder.\n"
+        "6. The mod will be downloaded to the 'python-curseforge-mod-downloader/downloads' directory in your home folder.\n"
     )
     print(
-        "Note: This program is not affiliated with Modrinth in any way. It is a simple command-line interface for downloading mods via the Modrinth API.\n"
+        "Note: This program is not affiliated with Curseforge in any way. It is a simple command-line interface for downloading mods via the Curseforge API.\n"
     )
 
 
@@ -251,7 +252,7 @@ def download(versions: List[str], project_id: str, project_slug: str) -> bool:
         file_name = file["filename"]
 
         downloads_directory = (
-            Path.home() / "python-modrinth-mod-downloader" / "downloads"
+            Path.home() / "python-curseforge-mod-downloader" / "downloads"
         )
 
         os.makedirs(downloads_directory / project_slug, exist_ok=True)
